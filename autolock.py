@@ -22,9 +22,10 @@ cap = cv2.VideoCapture(0)
 # Configuration for grace period
 consecutive_misses = 0
 grace_period_threshold = 3  # Number of consecutive misses allowed before locking
+locked = False  # Track whether the computer is currently locked
 
 def detect_person_and_face():
-    global consecutive_misses
+    global consecutive_misses, locked
 
     while True:
         # Capture frame from the webcam
@@ -63,6 +64,7 @@ def detect_person_and_face():
                     if face_results.detections:
                         print("Face detected, access granted")
                         consecutive_misses = 0  # Reset the miss counter
+                        locked = False  # Reset lock status
                     else:
                         print("Face not detected")
                         consecutive_misses += 1
@@ -73,9 +75,10 @@ def detect_person_and_face():
             consecutive_misses += 1
 
         # Lock the computer if the grace period threshold is exceeded
-        if consecutive_misses >= grace_period_threshold:
+        if consecutive_misses >= grace_period_threshold and not locked:
             print("Locking computer due to repeated misses")
             ctypes.windll.user32.LockWorkStation()  # Lock the computer
+            locked = True  # Mark the computer as locked
             consecutive_misses = 0  # Reset after locking
 
         # Wait for 1 second before the next check
